@@ -1,10 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'immunization.dart';
 
 class PersonalHistoryPage extends StatefulWidget {
-  const PersonalHistoryPage({super.key});
+  const PersonalHistoryPage({Key? key}) : super(key: key);
 
   @override
   _PersonalHistoryPageState createState() => _PersonalHistoryPageState();
@@ -12,56 +10,58 @@ class PersonalHistoryPage extends StatefulWidget {
 
 class _PersonalHistoryPageState extends State<PersonalHistoryPage> {
   String? dietaryPattern, sleep, bowelHabit, bladderHabit, hospitalization;
-  String? hobbies, areaOfInterest;
+  String? hobbies, areaOfInterest, hospitalizationReason;
   bool showOtherHobbyField = false;
   bool showOtherInterestField = false;
   bool showHospitalizationReason = false;
+  bool showCustomHobbies = false;
+  bool showCustomInterests = false;
+  bool showCustomCommunicableDiseases = false;
+  bool showCustomNonCommunicableDiseases = false;
 
-  TextEditingController otherHobbyController = TextEditingController();
-  TextEditingController otherInterestController = TextEditingController();
-  TextEditingController hospitalizationController = TextEditingController();
-  TextEditingController surgeriesController = TextEditingController();
-  TextEditingController bloodTransfusionController = TextEditingController();
-  TextEditingController allergyController = TextEditingController();
+  final TextEditingController otherHobbyController = TextEditingController();
+  final TextEditingController otherInterestController = TextEditingController();
+  final TextEditingController hospitalizationController =
+  TextEditingController();
+  final TextEditingController surgeriesController = TextEditingController();
+  final TextEditingController bloodTransfusionController =
+  TextEditingController();
+  final TextEditingController allergyController = TextEditingController();
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  // Custom controllers
+  final TextEditingController customHobbiesController = TextEditingController();
+  final TextEditingController customInterestsController =
+  TextEditingController();
+  final TextEditingController customCommunicableDiseasesController =
+  TextEditingController();
+  final TextEditingController customNonCommunicableDiseasesController =
+  TextEditingController();
 
   List<String> communicableDiseases = [
-    "Chickenpox", "Measles", "Mumps", "Jaundice", "TB", "Typhoid", "Malaria", "Dengue", "Chikungunya", "Pertussis"
+    "Chickenpox",
+    "Measles",
+    "Mumps",
+    "Jaundice",
+    "TB",
+    "Typhoid",
+    "Malaria",
+    "Dengue",
+    "Chikungunya",
+    "Pertussis",
   ];
   List<String> nonCommunicableDiseases = [
-    "Congenital Heart Disease", "Asthma", "Hypertension", "Diabetes (DM)", "Cancer", "Pneumonia"
+    "Congenital Heart Disease",
+    "Asthma",
+    "Hypertension",
+    "Diabetes (DM)",
+    "Cancer",
+    "Pneumonia",
   ];
 
   Set<String> selectedCommunicable = {};
   Set<String> selectedNonCommunicable = {};
-
-  @override
-  void initState() {
-    super.initState();
-    // Add listeners to update the form state when text changes
-    otherHobbyController.addListener(_updateFormState);
-    otherInterestController.addListener(_updateFormState);
-    hospitalizationController.addListener(_updateFormState);
-    surgeriesController.addListener(_updateFormState);
-    bloodTransfusionController.addListener(_updateFormState);
-    allergyController.addListener(_updateFormState);
-  }
-
-  @override
-  void dispose() {
-    otherHobbyController.dispose();
-    otherInterestController.dispose();
-    hospitalizationController.dispose();
-    surgeriesController.dispose();
-    bloodTransfusionController.dispose();
-    allergyController.dispose();
-    super.dispose();
-  }
-
-  void _updateFormState() {
-    setState(() {}); // Forces UI update when form changes
-  }
+  Set<String> customCommunicableDiseases = {};
+  Set<String> customNonCommunicableDiseases = {};
 
   bool get _isFormComplete {
     return dietaryPattern != null &&
@@ -71,66 +71,53 @@ class _PersonalHistoryPageState extends State<PersonalHistoryPage> {
         hospitalization != null &&
         hobbies != null &&
         areaOfInterest != null &&
-        (!showOtherHobbyField || otherHobbyController.text.trim().isNotEmpty) &&
-        (!showOtherInterestField || otherInterestController.text.trim().isNotEmpty) &&
-        (!showHospitalizationReason || hospitalizationController.text.trim().isNotEmpty);
+        (!showOtherHobbyField || otherHobbyController.text.isNotEmpty) &&
+        (!showOtherInterestField || otherInterestController.text.isNotEmpty) &&
+        (!showHospitalizationReason ||
+            hospitalizationController.text.isNotEmpty);
   }
 
-  Future<String?> _getUserId() async {
-    User? user = _auth.currentUser;
-    return user?.uid;
-  }
-
-  Future<void> _savePersonalHistory() async {
-    String? uid = await _getUserId();
-    if (uid == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("User not signed in! Please log in.")),
-      );
-      return;
-    }
-
-    try {
-      await FirebaseFirestore.instance.collection('personal_history').doc(uid).set({
-        'dietaryPattern': dietaryPattern,
-        'sleep': sleep,
-        'bowelHabit': bowelHabit,
-        'bladderHabit': bladderHabit,
-        'hobbies': hobbies,
-        'otherHobby': showOtherHobbyField ? otherHobbyController.text.trim() : "",
-        'areaOfInterest': areaOfInterest,
-        'otherInterest': showOtherInterestField ? otherInterestController.text.trim() : "",
-        'communicableDiseases': selectedCommunicable.toList(),
-        'nonCommunicableDiseases': selectedNonCommunicable.toList(),
-        'surgeries': surgeriesController.text.trim(),
-        'bloodTransfusion': bloodTransfusionController.text.trim(),
-        'allergies': allergyController.text.trim(),
-        'hospitalization': hospitalization,
-        'hospitalizationReason': showHospitalizationReason ? hospitalizationController.text.trim() : "",
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Personal history saved successfully!")),
-      );
-
-      // Navigate to next page
-      Navigator.pop(context);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error saving data: $e")),
+  void _navigateToImmunizationPage() {
+    if (_isFormComplete) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const ImmunizationPage()),
       );
     }
   }
 
-  Widget _buildCategory(String title, List<String> options, ValueChanged<String?> onChanged, String? selectedValue) {
+  Widget _buildCategory(
+      String title,
+      List<String> options,
+      ValueChanged<String?> onChanged,
+      String? selectedValue, {
+        bool? showCustomField,
+        VoidCallback? onCustomToggle,
+        TextEditingController? customController,
+      }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            if (onCustomToggle != null)
+              TextButton(
+                onPressed: onCustomToggle,
+                child: Text(
+                  showCustomField == true ? "Hide Custom" : "Add Custom",
+                ),
+              ),
+          ],
+        ),
         Wrap(
           spacing: 8.0,
-          children: options.map((option) {
+          children:
+          options.map((option) {
             return ChoiceChip(
               label: Text(option),
               selected: selectedValue == option,
@@ -139,36 +126,151 @@ class _PersonalHistoryPageState extends State<PersonalHistoryPage> {
                   onChanged(selected ? option : null);
                 });
               },
+              selectedColor: Colors.blue,
+              backgroundColor: Colors.grey[300],
+              labelStyle: TextStyle(
+                color:
+                selectedValue == option ? Colors.white : Colors.black,
+              ),
             );
           }).toList(),
         ),
+        if (showCustomField == true && customController != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: TextField(
+              controller: customController,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: "Enter custom option",
+              ),
+            ),
+          ),
         const SizedBox(height: 10),
       ],
     );
   }
 
-  Widget _buildCheckboxGroup(String title, List<String> options, Set<String> selectedOptions) {
+  // Rest of the code remains the same as in the previous implementation...
+
+  Widget _buildCheckboxGroup(
+      String title,
+      List<String> options,
+      Set<String> selectedOptions, {
+        bool? showCustomField,
+        TextEditingController? customController,
+        Set<String>? customOptions,
+        VoidCallback? onCustomToggle,
+      }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            if (onCustomToggle != null)
+              TextButton(
+                onPressed: onCustomToggle,
+                child: Text(
+                  showCustomField == true ? "Hide Custom" : "Add Custom",
+                ),
+              ),
+          ],
+        ),
         Wrap(
           spacing: 8.0,
-          children: options.map((option) {
-            return FilterChip(
-              label: Text(option),
-              selected: selectedOptions.contains(option),
-              onSelected: (selected) {
-                setState(() {
-                  if (selected) {
-                    selectedOptions.add(option);
-                  } else {
-                    selectedOptions.remove(option);
-                  }
-                });
-              },
-            );
-          }).toList(),
+          children: [
+            ...options.map((option) {
+              return FilterChip(
+                label: Text(option),
+                selected: selectedOptions.contains(option),
+                onSelected: (selected) {
+                  setState(() {
+                    if (selected) {
+                      selectedOptions.add(option);
+                    } else {
+                      selectedOptions.remove(option);
+                    }
+                  });
+                },
+                selectedColor: Colors.blue,
+                backgroundColor: Colors.grey[300],
+                labelStyle: TextStyle(
+                  color:
+                  selectedOptions.contains(option)
+                      ? Colors.white
+                      : Colors.black,
+                ),
+              );
+            }).toList(),
+            ...?customOptions?.map((option) {
+              return FilterChip(
+                label: Text(option),
+                selected: true,
+                onSelected: (_) {
+                  setState(() {
+                    customOptions.remove(option);
+                  });
+                },
+                selectedColor: Colors.green,
+                backgroundColor: Colors.grey[300],
+                labelStyle: const TextStyle(color: Colors.white),
+              );
+            }).toList(),
+          ],
+        ),
+        if (showCustomField == true)
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: customController,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: "Enter custom option",
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: () {
+                    setState(() {
+                      if (customController!.text.isNotEmpty) {
+                        customOptions!.add(customController.text);
+                        customController.clear();
+                      }
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+        const SizedBox(height: 10),
+      ],
+    );
+  }
+
+  Widget _buildTextArea(String title, TextEditingController controller) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        TextField(
+          controller: controller,
+          maxLines: 3,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            hintText: "Enter details...",
+          ),
         ),
         const SizedBox(height: 10),
       ],
@@ -185,28 +287,134 @@ class _PersonalHistoryPageState extends State<PersonalHistoryPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildCategory("Dietary Pattern", ["Vegetarian", "Non Vegetarian"], (val) => setState(() => dietaryPattern = val), dietaryPattern),
-              _buildCategory("Sleep", ["Adequate", "Inadequate"], (val) => setState(() => sleep = val), sleep),
-              _buildCategory("Bowel Habit", ["Regular", "Irregular"], (val) => setState(() => bowelHabit = val), bowelHabit),
-              _buildCategory("Bladder Habit", ["Normal", "Abnormal"], (val) => setState(() => bladderHabit = val), bladderHabit),
+              _buildCategory(
+                "Dietary Pattern",
+                ["Vegetarian", "Non Vegetarian"],
+                    (val) => setState(() => dietaryPattern = val),
+                dietaryPattern,
+              ),
 
-              _buildCategory("Hobbies", ["Reading", "Stamp Collection", "Gardening", "Any other"], (val) {
+              _buildCategory(
+                "Sleep",
+                ["Adequate", "Inadequate"],
+                    (val) => setState(() => sleep = val),
+                sleep,
+              ),
+
+              _buildCategory(
+                "Bowel Habit",
+                ["Regular", "Irregular"],
+                    (val) => setState(() => bowelHabit = val),
+                bowelHabit,
+              ),
+
+              _buildCategory(
+                "Bladder Habit",
+                ["Normal", "Abnormal"],
+                    (val) => setState(() => bladderHabit = val),
+                bladderHabit,
+              ),
+
+              _buildCategory(
+                "Hobbies",
+                ["Reading", "Stamp Collection", "Gardening", "Any other"],
+                    (val) {
+                  setState(() {
+                    hobbies = val;
+                    showOtherHobbyField = val == "Any other";
+                  });
+                },
+                hobbies,
+                showCustomField: showCustomHobbies,
+                onCustomToggle:
+                    () =>
+                    setState(() => showCustomHobbies = !showCustomHobbies),
+                customController: customHobbiesController,
+              ),
+              if (showOtherHobbyField)
+                _buildTextArea("Specify Hobby", otherHobbyController),
+
+              _buildCategory(
+                "Area of Interest",
+                ["Music", "Dance", "Sports", "Literature", "Any other"],
+                    (val) {
+                  setState(() {
+                    areaOfInterest = val;
+                    showOtherInterestField = val == "Any other";
+                  });
+                },
+                areaOfInterest,
+                showCustomField: showCustomInterests,
+                onCustomToggle:
+                    () => setState(
+                      () => showCustomInterests = !showCustomInterests,
+                ),
+                customController: customInterestsController,
+              ),
+              if (showOtherInterestField)
+                _buildTextArea("Specify Interest", otherInterestController),
+
+              // Rest of the build method remains the same...
+              _buildCheckboxGroup(
+                "Communicable Diseases",
+                communicableDiseases,
+                selectedCommunicable,
+                showCustomField: showCustomCommunicableDiseases,
+                customController: customCommunicableDiseasesController,
+                customOptions: customCommunicableDiseases,
+                onCustomToggle:
+                    () => setState(
+                      () =>
+                  showCustomCommunicableDiseases =
+                  !showCustomCommunicableDiseases,
+                ),
+              ),
+
+              _buildCheckboxGroup(
+                "Non-Communicable (NCD)",
+                nonCommunicableDiseases,
+                selectedNonCommunicable,
+                showCustomField: showCustomNonCommunicableDiseases,
+                customController: customNonCommunicableDiseasesController,
+                customOptions: customNonCommunicableDiseases,
+                onCustomToggle:
+                    () => setState(
+                      () =>
+                  showCustomNonCommunicableDiseases =
+                  !showCustomNonCommunicableDiseases,
+                ),
+              ),
+
+              _buildTextArea("Surgeries (if any)", surgeriesController),
+              _buildTextArea("Blood Transfusion", bloodTransfusionController),
+              _buildTextArea(
+                "Allergic to Medication/Other Items",
+                allergyController,
+              ),
+
+              _buildCategory("Hospitalization", ["Yes", "No"], (val) {
                 setState(() {
-                  hobbies = val;
-                  showOtherHobbyField = val == "Any other";
+                  hospitalization = val;
+                  showHospitalizationReason = val == "Yes";
                 });
-              }, hobbies),
-              if (showOtherHobbyField) TextField(controller: otherHobbyController, decoration: const InputDecoration(hintText: "Specify Hobby")),
-
-              _buildCheckboxGroup("Communicable Diseases", communicableDiseases, selectedCommunicable),
-              _buildCheckboxGroup("Non-Communicable Diseases", nonCommunicableDiseases, selectedNonCommunicable),
+              }, hospitalization),
+              if (showHospitalizationReason)
+                _buildTextArea(
+                  "Reason for hospitalization",
+                  hospitalizationController,
+                ),
 
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _savePersonalHistory ,
-                  child: const Text("Save & Next"),
+                  onPressed:
+                  _isFormComplete ? _navigateToImmunizationPage : null,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    textStyle: const TextStyle(fontSize: 18),
+                  ),
+                  child: const Text("Next"),
                 ),
               ),
             ],

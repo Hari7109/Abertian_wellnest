@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'biodata.dart';
+import 'change_password.dart';
 import 'personal_history.dart';
 import 'menstrual_history.dart';
 import 'immunization.dart';
@@ -79,7 +80,7 @@ class _StudentAccountPageState extends State<StudentAccountPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          "My Profile",
+          "Student Account",
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.w600,
             color: Colors.white,
@@ -373,6 +374,20 @@ class _StudentAccountPageState extends State<StudentAccountPage> {
                             ),
                           ),
                         ),
+                        _buildOptionCard(
+                          context,
+                          "Change Password",
+                          "Strong passwords, strong security",
+                          Icons.password_sharp,
+                          Colors.red,
+                              () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ChangePasswordPage(),
+                            ),
+                          ),
+                        ),
+
                       ]),
                     ),
                   ),

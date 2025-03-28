@@ -250,8 +250,9 @@ class NextPage extends StatelessWidget {
   }
 }
 
-class OkDoneReadyToGoPage extends StatelessWidget {
+class OkDoneReadyToGoPage extends StatelessWidget{
   const OkDoneReadyToGoPage({super.key});
+
 
   @override
   Widget build(BuildContext context) {

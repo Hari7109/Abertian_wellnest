@@ -1,12 +1,13 @@
+import 'package:albertian_wellnest/screens/specialist/specialist_dashboard.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 import 'screens/home.dart';
-import 'package:albertian_wellnest/screens/admin_add_user.dart';
+import 'package:albertian_wellnest/screens/admin/admin_dashboard.dart';
 import 'package:albertian_wellnest/screens/teacher/teacher_dashboard.dart';
-import 'package:albertian_wellnest/screens/doctor/doctorhomepage.dart';
+
 import 'package:albertian_wellnest/screens/auth.dart';
 
 void main() async {
@@ -74,7 +75,7 @@ class AuthCheck extends StatelessWidget {
                   Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const DoctorHomePage()));
+                          builder: (context) => const SpecialistDashboard()));
                 } else if (role == "user") {
                   Navigator.pushReplacement(
                       context,

@@ -1,13 +1,17 @@
+import 'package:albertian_wellnest/screens/specialist/specialist_dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:albertian_wellnest/screens/change_password.dart';
-import 'package:albertian_wellnest/screens/admin_add_user.dart';
+import 'package:albertian_wellnest/screens/bio_data_form.dart';
+import 'package:albertian_wellnest/screens/home.dart';
 import 'package:albertian_wellnest/screens/teacher/teacher_dashboard.dart';
-import 'package:albertian_wellnest/screens/doctor/doctorhomepage.dart';
 
-final _firebase = FirebaseAuth.instance;
-final _firestore = FirebaseFirestore.instance;
+import 'admin/admin_dashboard.dart';
+
+
+final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -27,43 +31,71 @@ class _LoginPageState extends State<LoginPage> {
       _formKey.currentState!.save();
 
       try {
-        final userCredential = await _firebase.signInWithEmailAndPassword(
+        final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
           email: emailController.text.trim(),
           password: passwordController.text.trim(),
         );
 
         String uid = userCredential.user!.uid;
 
-        // Fetch user role from Firestore
-        DocumentSnapshot userDoc =
-            await _firestore.collection('users').doc(uid).get();
+        // Fetch user data from Firestore
+        DocumentSnapshot userDoc = await _firestore.collection('users').doc(uid).get();
 
-        if (userDoc.exists) {
-          String role = userDoc['role'];
+        if (userDoc.exists && userDoc.data() != null) {
+          Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+          String role = userData['role'] ?? 'user';
+          bool isFirstLogin = userData['first_login'] ?? true;
 
-          // Navigate based on role
-          if (role == "admin") {
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (context) => const AdminDashboard()));
-          } else if (role == "teacher") {
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (context) => const TeacherDashboard()));
-          } else if (role == "doctor") {
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (context) => const DoctorHomePage()));
+          debugPrint("User Role: $role"); // Debugging output
+          debugPrint("First Login: $isFirstLogin");
+
+          if (isFirstLogin) {
+            Navigator.pushReplacement(
+              context, MaterialPageRoute(builder: (context) => ChangePasswordPage()),
+            );
+
+            // Update first_login status after password change
+            await _firestore.collection('users').doc(uid).update({
+              'first_login': false,
+            });
           } else {
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (context) => const ChangePasswordPage()));
+            // Navigate based on role
+            switch (role) {
+              case "admin":
+                Navigator.pushReplacement(
+                  context, MaterialPageRoute(builder: (context) => const AdminDashboard()),
+                );
+                break;
+              case "teacher":
+                Navigator.pushReplacement(
+                  context, MaterialPageRoute(builder: (context) => const TeacherDashboard()),
+                );
+                break;
+              case "specialist":
+                Navigator.pushReplacement(
+                  context, MaterialPageRoute(builder: (context) => const SpecialistDashboard()),
+                );
+                break;
+              default:
+                Navigator.pushReplacement(
+                  context, MaterialPageRoute(builder: (context) => const HomePage()),
+                );
+                break;
+            }
           }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text("No role assigned to this user. Contact admin.")),
+            const SnackBar(content: Text("User data not found. Contact admin.")),
           );
         }
       } on FirebaseAuthException catch (error) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(error.message ?? 'Authentication failed')),
+        );
+      } catch (e) {
+        debugPrint("Error: $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("An error occurred. Try again.")),
         );
       }
     }
@@ -108,9 +140,7 @@ class _LoginPageState extends State<LoginPage> {
                     border: OutlineInputBorder(),
                   ),
                   validator: (value) {
-                    if (value == null ||
-                        value.trim().isEmpty ||
-                        !value.contains('@')) {
+                    if (value == null || value.trim().isEmpty || !value.contains('@')) {
                       return 'Please enter a valid email address';
                     }
                     return null;
@@ -123,9 +153,7 @@ class _LoginPageState extends State<LoginPage> {
                     labelText: 'Password',
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
-                      icon: Icon(_obscureText
-                          ? Icons.visibility_off
-                          : Icons.visibility),
+                      icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility),
                       onPressed: () {
                         setState(() {
                           _obscureText = !_obscureText;
