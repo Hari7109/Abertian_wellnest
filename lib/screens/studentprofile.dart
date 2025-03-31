@@ -1,10 +1,15 @@
+import 'package:albertian_wellnest/screens/student_view_feedback.dart';
+import 'package:albertian_wellnest/screens/view_events_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'notifications_page.dart';
 import 'student_account.dart';
 import 'package:albertian_wellnest/screens/auth.dart';
-import 'package:flutter_svg/flutter_svg.dart'; // Add this package for SVG support
+import 'student_feedback_form.dart';
+import 'student_view_feedback.dart';
+import 'health_article_page.dart';
+//import 'package:flutter_svg/flutter_svg.dart'; // Add this package for SVG support
 
 class StudentProfile extends StatefulWidget {
   const StudentProfile({super.key});
@@ -75,7 +80,7 @@ class _StudentProfileState extends State<StudentProfile> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const NotificationsPage()),
+                MaterialPageRoute(builder: (context) => const ViewNotificationsPage()),
               );
             },
           ),
@@ -284,7 +289,55 @@ class _StudentProfileState extends State<StudentProfile> {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const NotificationsPage()),
+                              MaterialPageRoute(builder: (context) => const ViewNotificationsPage()),
+                            );
+                          },
+                        ),
+                        const Divider(height: 1, indent: 70),
+                        _buildSettingItem(
+                          icon: Icons.message,
+                          title: "Send Feedback",
+                          subtitle: "Share your thoughts and suggestions",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const SubmitFeedbackPage()),
+                            );
+                          },
+                        ),
+                        const Divider(height: 1, indent: 70),
+                        _buildSettingItem(
+                          icon: Icons.message,
+                          title: "View Feedback",
+                          subtitle: "View submitted feedback",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const ViewFeedbackPage()),
+                            );
+                          },
+                        ),
+                        const Divider(height: 1, indent: 70),
+                        _buildSettingItem(
+                          icon: Icons.event_available,
+                          title: "View Events",
+                          subtitle: "Look what's happening",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const ViewEventsPage()),
+                            );
+                          },
+                        ),
+                        const Divider(height: 1, indent: 70),
+                        _buildSettingItem(
+                          icon: Icons.article,
+                          title: "View Articles",
+                          subtitle: "Know health updates",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const HealthArticlesPage()),
                             );
                           },
                         ),
