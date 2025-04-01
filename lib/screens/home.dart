@@ -42,10 +42,10 @@ class MyApp extends StatelessWidget {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
         ),
-        cardTheme: CardTheme(
+        cardTheme: const CardThemeData( // Change CardTheme to CardThemeData
+          color: Colors.white,
+          shadowColor: Colors.grey,
           elevation: 4,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          clipBehavior: Clip.antiAlias,
         ),
         appBarTheme: const AppBarTheme(
           centerTitle: true,
